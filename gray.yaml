@@ -1,0 +1,9 @@
+train: mydataset/train
+val: mydataset/val
+test: mydataset/test
+
+# number of classes
+nc: 10
+
+# class names
+names: ['3001','302','3002','1002','4004','**','4002','2002_2005','4101','4102']
