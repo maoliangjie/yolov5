@@ -14,7 +14,7 @@ from utils.general import check_img_size, check_requirements, check_imshow, non_
 from utils.plots import plot_one_box,plot_one_box_under
 from utils.torch_utils import select_device, load_classifier, time_synchronized
 
-from color_recognition.src.color_classification_image import plot_pre_color
+#from color_recognition.src.color_classification_image import plot_pre_color
 from plot_what_you_want import plot_labcoat_num_English, plot_labcoat_num_Chinese, plot_craft_work_time_English, plot_craft_work_time_Chinese
 import json
 
@@ -85,7 +85,7 @@ def detect(save_img=False):
     end_time = 0
     last_time = 0
     last_time_remark = 0
-    remain_time = 30  # 检测动作有效持续时间
+    remain_time = 15  # 检测动作有效持续时间
     frame_count = -1  # 计数器
 
     frame_per_second = 30
@@ -209,16 +209,22 @@ def detect(save_img=False):
                         if current_tag != craft_name:
                             # 切换动作,current_tag为旧动作，craft_name为更新动作
                             # 旧动作持续时长若大于1s则保存json
-                            if (last_time - last_time_remark) > frame_per_second:
+                            if (last_time - last_time_remark) > remain_time:
                                 # 保存旧动作的json
-                                current_tag = craft_name
-                                craft_json_info = {"craft": None, "start_time": 0, "last_time": 0, }
-                                craft_json_info["craft"] = label_translate_dict.get(current_tag)
-                                temp = int(last_time_remark / frame_per_second)
-                                craft_json_info["start_time"] = temp
-                                craft_json_info["last_time"] = int(last_time / frame_per_second) - temp
-                                video_result.append(craft_json_info)
-
+                                if craft_name != "4004":
+                                    current_tag = craft_name
+                                    craft_json_info = {"craft": None, "start_time": 0, "last_time": 0, }
+                                    craft_json_info["craft"] = label_translate_dict.get(current_tag)
+                                    temp = int(last_time_remark / frame_per_second)
+                                    craft_json_info["start_time"] = temp
+                                    craft_json_info["last_time"] = int(last_time / frame_per_second) - temp
+                                    video_result.append(craft_json_info)
+                                    print('craft_name:',craft_name,type(craft_name))
+                                    if craft_name == "1002":
+                                        #"4004": "将裁片移至脚下"
+                                        craft_json_info2 = {"craft": "将裁片移至脚下", "start_time": 0, "last_time": 1, }
+                                        craft_json_info2["start_time"] = int(last_time / frame_per_second)
+                                        video_result.append(craft_json_info2)
                             # 更新当前动作
                             current_tag = craft_name
                             # 新动作开始
@@ -260,13 +266,20 @@ def detect(save_img=False):
                     plot_one_box_under(location_4101, im0, label="4101", color=colors[int(9)], line_thickness=3)
 
                 if frame_count == 0:
-                    craft_json_info = {"craft": None, "start_time": 0, "last_time": 0, }
-                    craft_json_info["craft"] = label_translate_dict.get(craft_name)
-                    temp = int(last_time_remark / frame_per_second)
-                    craft_json_info["start_time"] = temp
-                    craft_json_info["last_time"] = int(last_time / frame_per_second) - temp
-                    temp_str = str(craft_json_info)
-                    video_result.append(craft_json_info)
+                    if craft_name != "4004":
+                        craft_json_info = {"craft": None, "start_time": 0, "last_time": 0, }
+                        craft_json_info["craft"] = label_translate_dict.get(craft_name)
+                        temp = int(last_time_remark / frame_per_second)
+                        craft_json_info["start_time"] = temp
+                        craft_json_info["last_time"] = int(last_time / frame_per_second) - temp
+                        temp_str = str(craft_json_info)
+                        video_result.append(craft_json_info)
+                        print('craft_name:', craft_name,type(craft_name))
+                        if craft_name == "1002":
+                            # "4004": "将裁片移至脚下"
+                            craft_json_info2 = {"craft": "将裁片移至脚下", "start_time": 0, "last_time": 1, }
+                            craft_json_info2["start_time"] = int(last_time / frame_per_second)
+                            video_result.append(craft_json_info2)
                     # 要用到的量：last_time、frame_per_second、last_time_remark
                     # 在这写json
                     #若一直无新的1帧，则一直减少，直到int位数减为正
@@ -327,7 +340,7 @@ def detect(save_img=False):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--weights', nargs='+', type=str, default='runs/train/norm_craft_yolo5s_50epochs/weights/last.pt', help='model.pt path(s)')  #即pt文件，
-    parser.add_argument('--source', type=str, default='mydataset/8.mp4', help='source')
+    parser.add_argument('--source', type=str, default='mydataset/5.mp4', help='source')
     # detect.py - -source
     # 0  # 网络摄像头
     # img.jpg  # 图像
